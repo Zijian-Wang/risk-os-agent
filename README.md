@@ -165,7 +165,7 @@ Verifies:
 - **schwab-portfolio** — `pip install schwab-py`; set `SCHWAB_API_KEY`, `SCHWAB_APP_SECRET`; run `auth_schwab.py` once
 - **phase-analyzer** — `pip install yfinance pyyaml`
 - **Price API** — yfinance used by default
-- **News API** — TBD; set `NEWS_API_KEY` when configured
+- **market-news** — Supports NewsAPI.org and Finnhub; set `NEWS_API_KEY`, choose `NEWS_API_SOURCE` (`newsapi` or `finnhub`), optional `NEWS_CACHE_TTL_MIN`
 
 See [.env.example](.env.example) for required env vars.
 

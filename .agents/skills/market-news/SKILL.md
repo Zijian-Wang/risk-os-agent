@@ -4,7 +4,7 @@ description: Fetch and score news relevance to current holdings. Use when checki
 metadata:
   openclaw:
     requires:
-      env: ["NEWS_API_KEY"]
+      env: ["NEWS_API_KEY", "NEWS_API_SOURCE"]
     primaryEnv: "NEWS_API_KEY"
 ---
 
@@ -22,7 +22,9 @@ Returns scored headlines for the given tickers since the specified time.
 
 **Invocation:** `python scripts/get_news.py TICKER1 TICKER2 ... --since 24h`
 
-**News source:** TBD. Options: NewsAPI, Benzinga, Finnhub, RSS. Set `NEWS_API_KEY` when configured.
+Disable cache for one run: `python scripts/get_news.py NVDA --since 24h --no-cache`
+
+**News source:** `newsapi` and `finnhub` are supported. Set `NEWS_API_KEY`; choose provider with `NEWS_API_SOURCE` (default `newsapi`).
 
 ## Output Format
 
@@ -51,7 +53,13 @@ Returns scored headlines for the given tickers since the specified time.
 
 ## Status
 
-News API not yet configured. This skill provides the interface. When `NEWS_API_KEY` (or equivalent) is set, the agent can invoke the script. Until then, the agent may use web search for manual checks.
+Implemented providers:
+- **NewsAPI.org** (`NEWS_API_SOURCE=newsapi`)
+- **Finnhub** (`NEWS_API_SOURCE=finnhub`)
+
+Responses are cached in `workspace/news/` (default TTL 15 minutes via `NEWS_CACHE_TTL_MIN`). Use `--no-cache` to bypass cache.
+
+If `NEWS_API_KEY` is missing, the script returns a structured error and empty result.
 
 ## References
 

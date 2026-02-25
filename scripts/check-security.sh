@@ -61,7 +61,7 @@ while IFS= read -r f; do
 done < <(find . -type f \( -name "*.py" -o -name "*.ts" -o -name "*.js" -o -name "*.mjs" -o -name "*.json" -o -name "*.yaml" -o -name "*.yml" \) ! -path "./.git/*" ! -path "./node_modules/*" 2>/dev/null)
 
 # 3. Check scripts for unsafe eval/exec of user input
-for f in scripts/*.sh .agents/skills/*/scripts/* 2>/dev/null; do
+for f in scripts/*.sh .agents/skills/*/scripts/*; do
   [ -f "$f" ] || continue
   if grep -E "eval\s+\$|exec\s+\$|\.\s+\$" "$f" 2>/dev/null; then
     echo "WARN: Script may execute unvalidated input: $f"
