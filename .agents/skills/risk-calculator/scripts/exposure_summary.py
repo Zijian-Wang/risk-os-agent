@@ -44,7 +44,12 @@ def main():
     re_eval = []
     if total > 0:
         for p in positions:
-            mv = Decimal(str(p.get("quantity", 0))) * Decimal(str(p.get("currentPrice", 0)))
+            market_value = p.get("marketValue")
+            asset_type = (p.get("instrument") or {}).get("assetType")
+            if market_value is not None:
+                mv = Decimal(str(market_value))
+            elif asset_type == "EQUITY" or market_value is None:
+                mv = Decimal(str(p.get("quantity", 0))) * Decimal(str(p.get("currentPrice", 0)))
             pct = (mv / total * 100).quantize(Decimal("0.1"))
             if pct > threshold:
                 re_eval.append({"ticker": p.get("ticker"), "weightPct": float(pct), "reason": "concentration"})
