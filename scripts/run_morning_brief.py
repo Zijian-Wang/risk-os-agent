@@ -26,14 +26,14 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 BRIEFINGS_DIR = REPO_ROOT / "workspace" / "briefings"
 ALERTS_DIR = REPO_ROOT / "workspace" / "alerts"
 STATE_PATH = ALERTS_DIR / "briefing_state.json"
-RISK_RULES_PATH = REPO_ROOT / "config" / "risk-rules.yaml"
+RISK_RULES_PATH = REPO_ROOT / "agent" / "config" / "risk-rules.yaml"
 
-GET_POSITIONS = REPO_ROOT / ".agents" / "skills" / "schwab-portfolio" / "scripts" / "get_positions.py"
-CHECK_STOPS = REPO_ROOT / ".agents" / "skills" / "risk-calculator" / "scripts" / "check_stops.py"
-PORTFOLIO_DRAWDOWN = REPO_ROOT / ".agents" / "skills" / "risk-calculator" / "scripts" / "portfolio_drawdown.py"
-EXPOSURE_SUMMARY = REPO_ROOT / ".agents" / "skills" / "risk-calculator" / "scripts" / "exposure_summary.py"
-GET_PHASES = REPO_ROOT / ".agents" / "skills" / "phase-analyzer" / "scripts" / "get_phases.py"
-GET_NEWS = REPO_ROOT / ".agents" / "skills" / "market-news" / "scripts" / "get_news.py"
+GET_POSITIONS = REPO_ROOT / "skills" / "portfolio" / "scripts" / "get_positions.py"
+CHECK_STOPS = REPO_ROOT / "skills" / "risk-calculator" / "scripts" / "check_stops.py"
+PORTFOLIO_DRAWDOWN = REPO_ROOT / "skills" / "risk-calculator" / "scripts" / "portfolio_drawdown.py"
+EXPOSURE_SUMMARY = REPO_ROOT / "skills" / "risk-calculator" / "scripts" / "exposure_summary.py"
+GET_PHASES = REPO_ROOT / "skills" / "phase-analyzer" / "scripts" / "get_phases.py"
+GET_NEWS = REPO_ROOT / "skills" / "market-news" / "scripts" / "get_news.py"
 
 
 def as_decimal(value: Any, default: str = "0") -> Decimal:
