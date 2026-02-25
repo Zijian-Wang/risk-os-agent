@@ -78,7 +78,7 @@ Uses 10EMA, 30SMA, and 10-period Hull MA to classify each position:
 *Note: Periods above are the originals. You mentioned adjusting them for longer-trend analysis — update here when decided.*
 
 ### Risk Rules
-- Risk per trade: % of account (exact % TBD — carried over from old app)
+- Risk per trade default: **0.75% of account** (from old app calculator), user configurable
 - Position sizing formula: `shares = (account × risk%) / |entry - stop|`
 - Stop losses set per position and tracked via Schwab API
 - Portfolio-level exposure monitored at all times
@@ -107,6 +107,8 @@ Uses 10EMA, 30SMA, and 10-period Hull MA to classify each position:
 - **Portfolio positions:** Schwab Trader API (already integrated — carry over `api/schwab/sync.ts` logic from old repo)
   - OAuth 2.0 three-legged flow, tokens stored securely, auto-refresh
   - Handles equities, options (single + multi-leg), unsupported instruments (futures)
+  - Active protective order statuses include `WORKING`, `AWAITING_STOP_CONDITION`, `QUEUED`, `PENDING_ACTIVATION`
+  - Protective order types include `STOP`, `STOP_LIMIT`, `TRAILING_STOP`; for short positions, use protective `LIMIT` buy orders above entry as stop fallback
   - OCO order normalization for stop/target detection already battle-tested
   - Schwab Streamer API available for real-time WebSocket data if needed later
 - **Price & indicators:** Schwab price history API (already used in old app) + Stooq fallback
@@ -148,11 +150,20 @@ These are already solved — extract from old codebase rather than rebuilding:
 - Options risk calculation logic (`optionRisk.ts`)
 - Mock Schwab data for local testing (`api/lib/mockSchwabData.ts`)
 
+Carry-over behavior that should remain consistent:
+- Flatten nested orders (including OCO trees) before evaluating stops/targets per symbol.
+- Match close-side instructions by direction:
+  - Long close: `SELL`, `SELL_TO_CLOSE`
+  - Short close: `BUY`, `BUY_TO_COVER`, `BUY_TO_CLOSE`
+- Normalize short-equity pricing to positive display/risk math (`entry` positive, `currentPrice` from absolute market value).
+- Normalize option premiums to per-share premium (handle Schwab values where `averagePrice > 100` by dividing by 100).
+- Use quantity-weighted target extraction for multiple valid target legs.
+
 ---
 
 ## Open Questions
 - Exact indicator periods for phase system (send updated ThinkScript)
-- Specific risk % thresholds for alerts (check old app settings)
+- Keep default risk per trade at 0.75%, or switch to a new default?
 - News API source selection
 - Whether to keep minimal web dashboard or retire it entirely
 - How to ingest investment bank reports (PDF parsing?)
