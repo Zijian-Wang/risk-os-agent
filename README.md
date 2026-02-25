@@ -74,7 +74,7 @@ risk-os-agent/
 │   └── risk-rules.yaml      # Alert thresholds (TBD)
 ├── workspace/               # Agent workspace data
 │   ├── portfolio/          # Cached positions
-│   ├── alerts/             # Alert history (dedup)
+│   ├── alerts/             # Alert history + briefing_state.json (dedup/deltas)
 │   └── briefings/           # Morning brief outputs
 ├── scaffolds/              # Templates and scripts for creating skills
 │   ├── templates/          # SKILL.md and skill structure templates
@@ -164,6 +164,7 @@ Runs the end-to-end morning brief pipeline:
 - run stop/drawdown/exposure checks (`risk-calculator`)
 - compute phases for holdings (`phase-analyzer`)
 - fetch/scored relevant news (`market-news`)
+- persist state in `workspace/alerts/briefing_state.json` for phase/news deltas
 - write briefing artifacts to `workspace/briefings/`
 
 Example:

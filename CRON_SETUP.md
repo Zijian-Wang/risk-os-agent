@@ -36,6 +36,9 @@ Outputs:
 - `workspace/briefings/2026-02-25.md`
 - `workspace/briefings/2026-02-25.json`
 
+State used for deltas across runs:
+- `workspace/alerts/briefing_state.json` (phase transitions + newly seen headlines)
+
 ## Heartbeat
 
 For proactive monitoring (every 30–60 min), ensure heartbeat is enabled in `~/.openclaw/openclaw.json`:

@@ -13,6 +13,7 @@ P0 scope:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import subprocess
 import sys
@@ -23,6 +24,8 @@ from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 BRIEFINGS_DIR = REPO_ROOT / "workspace" / "briefings"
+ALERTS_DIR = REPO_ROOT / "workspace" / "alerts"
+STATE_PATH = ALERTS_DIR / "briefing_state.json"
 
 GET_POSITIONS = REPO_ROOT / ".agents" / "skills" / "schwab-portfolio" / "scripts" / "get_positions.py"
 CHECK_STOPS = REPO_ROOT / ".agents" / "skills" / "risk-calculator" / "scripts" / "check_stops.py"
@@ -100,6 +103,40 @@ def unique_lines(lines: list[str]) -> list[str]:
     return out
 
 
+def load_state(path: Path) -> dict[str, Any]:
+    if not path.exists():
+        return {}
+    try:
+        payload = json.loads(path.read_text())
+        return payload if isinstance(payload, dict) else {}
+    except Exception:
+        return {}
+
+
+def save_state(path: Path, state: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(state, indent=2))
+
+
+def phase_as_int(value: Any) -> int | None:
+    try:
+        return int(value)
+    except Exception:
+        return None
+
+
+def headline_hash(item: dict[str, Any]) -> str:
+    key = "|".join(
+        [
+            str(item.get("ticker", "")).upper(),
+            str(item.get("title", "")).strip(),
+            str(item.get("source", "")).strip(),
+            str(item.get("publishedAt", "")).strip(),
+        ]
+    )
+    return hashlib.sha256(key.encode("utf-8")).hexdigest()[:16]
+
+
 def choose_actionable_thought(hard_alerts: list[str], phases: list[dict[str, Any]]) -> str | None:
     if hard_alerts:
         return "Address hard alerts first before considering new entries."
@@ -147,6 +184,8 @@ def main() -> int:
     args = parse_args()
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
+    previous_state = load_state(STATE_PATH)
+    state_loaded = bool(previous_state)
 
     py = sys.executable
 
@@ -195,10 +234,25 @@ def main() -> int:
     hard_alerts = unique_lines(hard_alerts)
 
     watch_flags: list[str] = []
+    phase_transitions: list[str] = []
+    previous_phase_map = previous_state.get("phaseByTicker", {})
+    if not isinstance(previous_phase_map, dict):
+        previous_phase_map = {}
     phase_rows = [p for p in phases if isinstance(p, dict) and not p.get("error")]
     for row in sorted(phase_rows, key=lambda p: str(p.get("ticker", ""))):
         ticker = row.get("ticker", "?")
-        phase = row.get("phase")
+        phase = phase_as_int(row.get("phase"))
+        previous_phase = phase_as_int(previous_phase_map.get(str(ticker)))
+        if previous_phase is not None and phase is not None:
+            row["previousPhase"] = previous_phase
+            if phase != previous_phase:
+                transition = f"{ticker} phase transition {previous_phase} -> {phase}"
+                phase_transitions.append(transition)
+                if (previous_phase, phase) in {(3, 4), (4, 5)}:
+                    hard_alerts.append(f"Phase alert: {transition} (hard-alert transition).")
+                else:
+                    watch_flags.append(f"{transition}.")
+
         hma_trend = row.get("hmaTrend")
         if phase == 4:
             watch_flags.append(f"{ticker} is in Phase 4 (weakening trend; Hull is falling).")
@@ -215,10 +269,33 @@ def main() -> int:
             f"{flag.get('ticker', '?')} concentration at {fmt_pct(flag.get('weightPct', 0))} "
             f"({flag.get('reason', 'review')})."
         )
+    hard_alerts = unique_lines(hard_alerts)
     watch_flags = unique_lines(watch_flags)
 
-    headlines = news_data.get("headlines", []) if isinstance(news_data.get("headlines"), list) else []
-    external_events = build_external_events([h for h in headlines if isinstance(h, dict)])
+    headlines = [h for h in news_data.get("headlines", []) if isinstance(h, dict)] if isinstance(news_data.get("headlines"), list) else []
+    previous_news_hashes = previous_state.get("newsHashes", [])
+    if not isinstance(previous_news_hashes, list):
+        previous_news_hashes = []
+    previous_news_hash_set = {str(h) for h in previous_news_hashes}
+
+    new_headlines: list[dict[str, Any]] = []
+    all_headline_hashes: list[str] = []
+    for item in headlines:
+        digest = headline_hash(item)
+        all_headline_hashes.append(digest)
+        if digest not in previous_news_hash_set:
+            new_headlines.append(item)
+
+    # Show only newly seen items after first run; first run includes all available.
+    external_events = build_external_events(new_headlines if state_loaded else headlines)
+    delta_lines: list[str] = []
+    if phase_transitions:
+        delta_lines.extend(phase_transitions)
+    if state_loaded:
+        delta_lines.append(f"New scored headlines since last run: {len(new_headlines)}")
+    else:
+        delta_lines.append("Baseline run: no previous state found.")
+    delta_lines = unique_lines(delta_lines)
 
     actionable_thought = choose_actionable_thought(hard_alerts, phase_rows)
 
@@ -240,10 +317,15 @@ def main() -> int:
         },
         "summaryLine": snapshot_line,
         "sections": {
+            "changesSinceLastRun": delta_lines,
             "immediateActions": hard_alerts,
             "watchlistFlags": watch_flags,
             "externalEvents": external_events,
             "actionableThought": actionable_thought,
+        },
+        "deltas": {
+            "phaseTransitions": phase_transitions,
+            "newHeadlinesCount": len(new_headlines),
         },
         "inputs": {
             "positions": positions_data,
@@ -262,8 +344,17 @@ def main() -> int:
         "",
         f"Portfolio health snapshot: {snapshot_line}",
         "",
-        "## Immediate actions",
+        "## Changes since previous run",
     ]
+    if delta_lines:
+        md_lines.extend(f"- {line}" for line in delta_lines)
+    else:
+        md_lines.append("- None.")
+
+    md_lines.extend([
+        "",
+        "## Immediate actions",
+    ])
     if hard_alerts:
         md_lines.extend(f"- {line}" for line in hard_alerts)
     else:
@@ -290,6 +381,20 @@ def main() -> int:
     json_path.write_text(json.dumps(briefing_json, indent=2))
     md_path.write_text("\n".join(md_lines))
 
+    latest_phase_map: dict[str, int] = {}
+    for row in phase_rows:
+        ticker = str(row.get("ticker", "")).upper()
+        phase_value = phase_as_int(row.get("phase"))
+        if ticker and phase_value is not None:
+            latest_phase_map[ticker] = phase_value
+    latest_news_hashes = sorted(set(all_headline_hashes))[-500:]
+    next_state = {
+        "updatedAt": generated_at,
+        "phaseByTicker": latest_phase_map,
+        "newsHashes": latest_news_hashes,
+    }
+    save_state(STATE_PATH, next_state)
+
     print(
         json.dumps(
             {
@@ -300,6 +405,9 @@ def main() -> int:
                 "hardAlerts": len(hard_alerts),
                 "watchFlags": len(watch_flags),
                 "externalEvents": len(external_events),
+                "phaseTransitions": len(phase_transitions),
+                "newHeadlines": len(new_headlines),
+                "stateFile": str(STATE_PATH),
             }
         )
     )
