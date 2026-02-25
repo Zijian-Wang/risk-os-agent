@@ -118,10 +118,12 @@ def main():
     hma_prev = hma(closes[:-1], hma_p) if len(closes) > 1 else hma_val
     phase = get_phase(price, ema10_val, sma30_val, hma_val, hma_prev)
 
-    # HMA cross (simplified: compare current to prior)
-    if price < hma_val and price > hma_prev:
+    prev_price = closes[-2]
+
+    # HMA cross: detect price crossing through HMA using prior close vs prior HMA.
+    if prev_price >= hma_prev and price < hma_val:
         hma_cross = "bearish"
-    elif price > hma_val and price < hma_prev:
+    elif prev_price <= hma_prev and price > hma_val:
         hma_cross = "bullish"
     else:
         hma_cross = "neutral"

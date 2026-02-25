@@ -63,7 +63,7 @@ Optional. Returns additional indicators (RSI, MACD, etc.) when configured in `co
 }
 ```
 
-`hmaCross`: "bullish" | "bearish" | "neutral" (dead cross = bearish)
+`hmaCross`: "bullish" | "bearish" | "neutral" (dead cross = bearish). Uses prior close vs prior HMA: bearish when `prev_close >= hmaPrev and price < hma`; bullish when `prev_close <= hmaPrev and price > hma`.
 `hmaTrend`: "rising" | "falling" | "flat"
 
 ## Config
