@@ -36,7 +36,7 @@ Returns phase 1–5, 10EMA, 30SMA, HMA values, and HMA cross signal for one tick
 
 ### get_phases(tickers)
 
-Returns phases for multiple tickers. Input: comma-separated or JSON array.
+Returns phases for multiple tickers using one batched yfinance download call. Input: comma-separated or JSON array.
 
 **Invocation:** `python scripts/get_phases.py TICKER1 TICKER2 ...`
 

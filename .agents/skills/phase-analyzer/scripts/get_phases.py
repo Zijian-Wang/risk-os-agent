@@ -1,40 +1,72 @@
 #!/usr/bin/env python3
 """
-Compute phases for multiple tickers. Calls get_phase logic per ticker.
+Compute phases for multiple tickers with one batched yfinance download call.
 Usage: get_phases.py TICKER1 TICKER2 ...
 """
 
-import json
-import subprocess
-import sys
-from pathlib import Path
+from __future__ import annotations
 
-SCRIPT_DIR = Path(__file__).resolve().parent
-GET_PHASE = SCRIPT_DIR / "get_phase.py"
+import json
+import sys
+
+import pandas as pd
+
+from phase_core import analyze_closes, dump_error_and_exit, load_config
+
+
+def _extract_closes(hist: pd.DataFrame, ticker: str) -> list[float]:
+    if hist.empty:
+        return []
+
+    # Batched call with group_by='ticker' returns MultiIndex columns.
+    if isinstance(hist.columns, pd.MultiIndex):
+        if ticker in hist.columns.get_level_values(0):
+            series = hist[ticker]["Close"]
+            return series.dropna().tolist()
+        return []
+
+    # Single-ticker shape fallback.
+    if "Close" in hist:
+        return hist["Close"].dropna().tolist()
+
+    return []
 
 
 def main():
     if len(sys.argv) < 2:
-        print(json.dumps({"error": "Usage: get_phases.py TICKER1 TICKER2 ..."}))
-        sys.exit(1)
+        dump_error_and_exit("Usage: get_phases.py TICKER1 TICKER2 ...")
 
     tickers = [t.upper() for t in sys.argv[1:]]
-    results = []
 
-    for ticker in tickers:
-        try:
-            out = subprocess.run(
-                [sys.executable, str(GET_PHASE), ticker],
-                capture_output=True,
-                text=True,
-                timeout=30,
+    try:
+        import yfinance as yf
+    except ImportError:
+        print(
+            json.dumps(
+                {
+                    "phases": [
+                        {"ticker": ticker, "error": "yfinance required: pip install yfinance"}
+                        for ticker in tickers
+                    ]
+                }
             )
-            if out.returncode == 0:
-                results.append(json.loads(out.stdout))
-            else:
-                results.append({"ticker": ticker, "error": out.stderr or out.stdout or "Unknown error"})
-        except Exception as e:
-            results.append({"ticker": ticker, "error": str(e)})
+        )
+        sys.exit(1)
+
+    hist = yf.download(
+        tickers,
+        period="3mo",
+        interval="1d",
+        group_by="ticker",
+        progress=False,
+        auto_adjust=True,
+    )
+
+    cfg = load_config()
+    results = []
+    for ticker in tickers:
+        closes = _extract_closes(hist, ticker)
+        results.append(analyze_closes(ticker=ticker, closes=closes, cfg=cfg))
 
     print(json.dumps({"phases": results}))
 

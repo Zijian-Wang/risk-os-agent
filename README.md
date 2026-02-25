@@ -162,6 +162,7 @@ Verifies:
 Runs the end-to-end morning brief pipeline:
 - pull positions (`schwab-portfolio`)
 - run stop/drawdown/exposure checks (`risk-calculator`)
+- concentration exposure uses position `marketValue` when available (important for options contract sizing)
 - compute phases for holdings (`phase-analyzer`)
 - fetch/scored relevant news (`market-news`)
 - persist state in `workspace/alerts/briefing_state.json` for phase/news deltas
@@ -183,6 +184,7 @@ python3 scripts/run_morning_brief.py --date 2026-02-25 --since 24h
   - Default phase system: 10EMA, 30SMA, 10-period Hull
   - Priority: Phase 4 is evaluated first, then 1, 2, 3, 5
   - `hmaCross` uses prior close vs prior HMA for bullish/bearish cross detection (single-bar fallback uses current price)
+  - `get_phases.py` uses one batched yfinance download for multi-ticker analysis
 - **Price API**
   - Current implementation: yfinance used by default (phase-analyzer)
   - Target architecture: migrate to Schwab price history API primary, with Stooq fallback
