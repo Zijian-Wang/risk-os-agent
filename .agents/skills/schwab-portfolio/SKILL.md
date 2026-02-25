@@ -24,7 +24,7 @@ Returns current positions with: ticker, quantity, avg cost, current price, P&L, 
 
 ### get_account_summary
 
-Returns account-level summary: total value, cash, buying power, daily P&L %.
+Returns account-level summary: total value, cash, buying power, daily P&L % (derived from Schwab `currentBalances.dailyProfitLoss` or `currentBalances.currentDayProfitLoss` when available).
 
 **Invocation:** Same script returns both positions and summary in one call.
 
@@ -47,7 +47,8 @@ Returns account-level summary: total value, cash, buying power, daily P&L %.
     "totalValue": 50000,
     "cash": 5000,
     "dailyPnlPct": -0.5
-  }
+  },
+  "_stderr": "dailyProfitLoss not found in securitiesAccount.currentBalances (observed keys: [...])"
 }
 ```
 
