@@ -56,7 +56,7 @@ Returns account-level summary: total value, cash, buying power, daily P&L % (der
 
 - `SCHWAB_API_KEY` — Schwab app key (from developer portal)
 - `SCHWAB_APP_SECRET` — Schwab app secret
-- `SCHWAB_CALLBACK_URL` — OAuth callback (default: `https://127.0.0.1`)
+- `SCHWAB_CALLBACK_URL` — OAuth callback (default: `https://127.0.0.1/auth/schwab/callback`)
 - `SCHWAB_TOKEN_PATH` — Path to token file (default: `workspace/portfolio/token.json`)
 - `config/risk-rules.yaml` `schwab_order_detection`:
   - `active_statuses` (default: WORKING, AWAITING_STOP_CONDITION, QUEUED, PENDING_ACTIVATION)

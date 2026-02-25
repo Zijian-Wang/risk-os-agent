@@ -179,7 +179,7 @@ python3 scripts/run_morning_brief.py --date 2026-02-25 --since 24h
 
 - **OpenClaw** — Runtime (self-hosted, Docker on NAS)
 - **Python 3** — For all skill scripts
-- **schwab-portfolio** — `pip install schwab-py`; set `SCHWAB_API_KEY`, `SCHWAB_APP_SECRET`; run `auth_schwab.py` once
+- **schwab-portfolio** — `pip install schwab-py`; set `SCHWAB_API_KEY`, `SCHWAB_APP_SECRET`; set `SCHWAB_CALLBACK_URL` to your app callback (default `https://127.0.0.1/auth/schwab/callback`); run `auth_schwab.py` once
 - **phase-analyzer** — `pip install yfinance pyyaml`
   - Default phase system: 10EMA, 30SMA, 10-period Hull
   - Priority: Phase 4 is evaluated first, then 1, 2, 3, 5

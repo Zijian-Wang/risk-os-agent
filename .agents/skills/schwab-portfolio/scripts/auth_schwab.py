@@ -16,7 +16,7 @@ TOKEN_PATH = Path(os.environ.get("SCHWAB_TOKEN_PATH", str(WORKSPACE / "token.jso
 
 api_key = os.environ.get("SCHWAB_API_KEY")
 app_secret = os.environ.get("SCHWAB_APP_SECRET")
-callback = os.environ.get("SCHWAB_CALLBACK_URL", "https://127.0.0.1")
+callback = os.environ.get("SCHWAB_CALLBACK_URL", "https://127.0.0.1/auth/schwab/callback")
 
 if not api_key or not app_secret:
     print("Set SCHWAB_API_KEY and SCHWAB_APP_SECRET. Get keys from https://developer.schwab.com/")
