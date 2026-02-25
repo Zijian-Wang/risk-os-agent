@@ -83,6 +83,16 @@ Uses 10EMA, 30SMA, and 10-period Hull MA to classify each position:
 - Stop losses set per position and tracked via Schwab API
 - Portfolio-level exposure monitored at all times
 - Consecutive down days on portfolio or position → flag for exit/rebalance
+- **Configured thresholds (from `config/risk-rules.yaml`):**
+  - `hard_alerts.portfolio_daily_down_pct = 1.0`
+  - `hard_alerts.stop_approaching_pct = 5.0`
+  - `hard_alerts.phase_transition_pairs = [[3,4],[4,5]]`
+  - `soft_flags.consecutive_down_days = 2`
+  - `soft_flags.concentration_warn_pct = 20.0`
+- **Schwab protective-order detection config (from `config/risk-rules.yaml`):**
+  - `active_statuses = [WORKING, AWAITING_STOP_CONDITION, QUEUED, PENDING_ACTIVATION]`
+  - `protective_order_types = [STOP, STOP_LIMIT, TRAILING_STOP]`
+  - `short_limit_as_stop_fallback = true` (carry-over compatibility rule)
 - **Options risk handling (from old app logic):**
   - Long single-leg: max loss = premium × 100 × contracts
   - Short single-leg: unbounded risk (N/A) — excluded from portfolio totals
@@ -163,7 +173,6 @@ Carry-over behavior that should remain consistent:
 
 ## Open Questions
 - Exact indicator periods for phase system (send updated ThinkScript)
-- Keep default risk per trade at 0.75%, or switch to a new default?
 - News API source selection
 - Whether to keep minimal web dashboard or retire it entirely
 - How to ingest investment bank reports (PDF parsing?)
