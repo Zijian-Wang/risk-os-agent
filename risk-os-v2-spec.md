@@ -57,28 +57,37 @@ When I ask a question ("what's going on with DG?", "should I add to ON?"), the a
 
 ## Investment Framework (Agent Must Know This)
 
-### Phase System (James Boyd / adapted)
+### Phase System (James Boyd)
 Uses 10EMA, 30SMA, and 10-period Hull MA to classify each position:
 
-| Phase | Condition | Meaning |
-|-------|-----------|---------|
-| 1 | Below both 10EMA and 30SMA | Avoid / very bearish |
-| 2 | Above 10EMA, below 30SMA | Gaining momentum, watch |
-| 3 | Above both 10EMA and 30SMA | Long entry zone |
-| 4 | Phase 3 conditions + 10EMA > 30SMA + Hull MA is falling | Weakening warning while still technically strong |
-| 5 | Close < 10EMA and Close > 30SMA | Pullback in strong trend; caution for potential breakdown |
+| Phase | Conditions | Meaning | Action |
+|-------|------------|---------|--------|
+| 1 | Close < 10EMA **and** Close < 30SMA | Broken support, downtrend | Avoid |
+| 2 | Close > 10EMA **and** Close < 30SMA | Breaking upward through resistance, early recovery | Watch |
+| 3 | Close > 10EMA **and** Close > 30SMA | Strong trend — sweet spot for bull flags and breakouts | Long entry zone |
+| 4 | Phase 3 conditions **+** 10EMA > 30SMA **+** Hull MA is falling | Still Phase 3 technically, but showing weakness — warning sign | Watch closely, possible add or prepare to exit |
+| 5 | Close < 10EMA **and** Close > 30SMA | Pullback in strong trend — may bounce off 30SMA or break down | Caution, watch for breakdown |
 
-Phase priority in script: **4, 1, 2, 3, 5** (Phase 4 is evaluated first).
+**Indicators:**
+- MA10 = 10-period Exponential Moving Average
+- MA30 = 30-period Simple Moving Average
+- Hull = 10-period Hull Moving Average (used only for Phase 4 detection — falling Hull = warning)
 
-*Note: Defaults use original periods and can be adjusted for longer-trend analysis later.*
+**Phase priority (from script):** Phase 4 is evaluated first, then 1, 2, 3, 5. This means a stock meeting Phase 4 conditions will show as Phase 4 even though it technically satisfies Phase 3.
 
-Also uses: 10/20 day HMA for fast momentum detection.
+*Note: Periods above are the originals. You mentioned adjusting them for longer-trend analysis — update here when decided.*
 
-### Risk Rules (High Level)
-- Risk per trade is managed as a % of account — specifics TBD
-- Stop losses are set per position and tracked
-- Portfolio-level risk exposure is monitored
-- Consecutive losses or drawdown triggers a re-evaluation signal
+### Risk Rules
+- Risk per trade: % of account (exact % TBD — carried over from old app)
+- Position sizing formula: `shares = (account × risk%) / |entry - stop|`
+- Stop losses set per position and tracked via Schwab API
+- Portfolio-level exposure monitored at all times
+- Consecutive down days on portfolio or position → flag for exit/rebalance
+- **Options risk handling (from old app logic):**
+  - Long single-leg: max loss = premium × 100 × contracts
+  - Short single-leg: unbounded risk (N/A) — excluded from portfolio totals
+  - Defined-risk spreads (verticals, iron condors): theoretical max loss formula
+  - Unbalanced/complex multi-leg: conservative unknown-risk fallback
 
 ### Decision Style
 - Technical indicators + macro context + investment bank research inform entries/exits
@@ -95,10 +104,14 @@ Also uses: 10/20 day HMA for fast momentum detection.
 - **Notification:** OpenClaw-native (channel TBD — Telegram, WhatsApp, etc.)
 
 ### Data Sources
-- **Portfolio positions:** Schwab Trader API via schwab-py (integrated in risk-os-agent)
-- **Price & indicators:** To be determined during build
+- **Portfolio positions:** Schwab Trader API (already integrated — carry over `api/schwab/sync.ts` logic from old repo)
+  - OAuth 2.0 three-legged flow, tokens stored securely, auto-refresh
+  - Handles equities, options (single + multi-leg), unsupported instruments (futures)
+  - OCO order normalization for stop/target detection already battle-tested
+  - Schwab Streamer API available for real-time WebSocket data if needed later
+- **Price & indicators:** Schwab price history API (already used in old app) + Stooq fallback
 - **News:** To be determined — needs to be position-relevant, not generic market noise
-- **Research/reports:** TBD — investment bank reports, Citron-style research
+- **Research/reports:** TBD — investment bank reports, Citron-style short reports
 
 ### Skills (to be built)
 | Skill | Purpose |
@@ -127,9 +140,19 @@ The agent will be configured with:
 
 ---
 
+## Carry Over From Old Repo
+These are already solved — extract from old codebase rather than rebuilding:
+- Schwab OAuth flow + token refresh logic (`api/auth/schwab/`)
+- Position + stop order sync and normalization (`api/schwab/sync.ts`)
+- Options symbol parsing and strategy classification (`optionStrategy.ts`)
+- Options risk calculation logic (`optionRisk.ts`)
+- Mock Schwab data for local testing (`api/lib/mockSchwabData.ts`)
+
+---
+
 ## Open Questions
-- Exact indicator periods for phase system
-- Specific risk % thresholds for alerts
+- Exact indicator periods for phase system (send updated ThinkScript)
+- Specific risk % thresholds for alerts (check old app settings)
 - News API source selection
 - Whether to keep minimal web dashboard or retire it entirely
 - How to ingest investment bank reports (PDF parsing?)
