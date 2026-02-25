@@ -65,11 +65,11 @@ OpenClaw will read the repo, understand the structure, and configure itself. You
 risk-os-agent/
 ├── .agents/skills/           # OpenClaw skills (auto-discovered when workspace is this repo)
 │   ├── schwab-portfolio/     # Positions, P&L, stops (Schwab API)
-│   ├── phase-analyzer/       # Phase 1-5, HMA (uses yfinance)
+│   ├── phase-analyzer/       # James Boyd phases (priority 4,1,2,3,5)
 │   ├── risk-calculator/     # Stop proximity, drawdown, exposure
-│   └── market-news/         # Position-relevant news (API TBD)
+│   └── market-news/         # Position-relevant news (NewsAPI/Finnhub)
 ├── config/
-│   ├── phase-config.yaml    # Phase system periods (TBD)
+│   ├── phase-config.yaml    # Phase periods (default 10EMA/30SMA/10 Hull)
 │   ├── ta-config.yaml       # RSI, MACD, etc. (extensible)
 │   └── risk-rules.yaml      # Alert thresholds (TBD)
 ├── workspace/               # Agent workspace data
@@ -101,6 +101,7 @@ Use the scaffolds to create new skills and validate the project:
 | `./scripts/create-skill.sh <name>` | Create a new skill from template in `.agents/skills/<name>/` |
 | `./scripts/check-structure.sh` | Validate project structure, required files, skill layout |
 | `./scripts/check-security.sh` | Check for secrets, env exposure, unsafe patterns |
+| `./scripts/run_morning_brief.py` | Run P0 morning briefing pipeline and write `workspace/briefings/<date>.md/.json` |
 
 ### Creating a New Skill
 
@@ -156,6 +157,20 @@ Verifies:
 - No `eval`, `exec` of user input without sanitization in scripts
 - Skills don't expose sensitive paths or credentials in SKILL.md
 
+### Morning Brief Runner (`run_morning_brief.py`)
+
+Runs the end-to-end morning brief pipeline:
+- pull positions (`schwab-portfolio`)
+- run stop/drawdown/exposure checks (`risk-calculator`)
+- compute phases for holdings (`phase-analyzer`)
+- fetch/scored relevant news (`market-news`)
+- write briefing artifacts to `workspace/briefings/`
+
+Example:
+```bash
+python3 scripts/run_morning_brief.py --date 2026-02-25 --since 24h
+```
+
 ---
 
 ## Dependencies
@@ -164,6 +179,8 @@ Verifies:
 - **Python 3** — For all skill scripts
 - **schwab-portfolio** — `pip install schwab-py`; set `SCHWAB_API_KEY`, `SCHWAB_APP_SECRET`; run `auth_schwab.py` once
 - **phase-analyzer** — `pip install yfinance pyyaml`
+  - Default phase system: 10EMA, 30SMA, 10-period Hull
+  - Priority: Phase 4 is evaluated first, then 1, 2, 3, 5
 - **Price API** — yfinance used by default
 - **market-news** — Supports NewsAPI.org and Finnhub; set `NEWS_API_KEY`, choose `NEWS_API_SOURCE` (`newsapi` or `finnhub`), optional `NEWS_CACHE_TTL_MIN`
 

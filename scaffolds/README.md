@@ -17,6 +17,7 @@ Run from repo root:
 | `./scripts/create-skill.sh <name>` | Create a new skill in `.agents/skills/<name>/` |
 | `./scripts/check-structure.sh` | Validate project structure and skill layout |
 | `./scripts/check-security.sh` | Check for secrets, env exposure, unsafe patterns |
+| `./scripts/run_morning_brief.py` | Execute the daily briefing pipeline and write artifacts to `workspace/briefings/` |
 
 ## Creating a Skill
 

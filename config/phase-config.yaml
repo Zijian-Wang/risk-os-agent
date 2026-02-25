@@ -1,9 +1,9 @@
 # Phase system config (James Boyd / adapted)
-# Periods TBD during build
+# Current defaults use original periods and can be tuned later.
 
 ema_period: 10
 sma_period: 30
-hma_period: null  # TBD
+hma_period: 10  # used for Phase 4 weakening detection (falling Hull)
 
 # HMA fast/slow for dead cross detection
 hma_fast: 10

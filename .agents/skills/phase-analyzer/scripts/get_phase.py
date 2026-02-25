@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Compute phase (1-5) for a ticker using 10EMA, 30SMA, HMA.
+Compute phase (1-5) for a ticker using James Boyd phase logic.
 Uses yfinance for price data when no API key is set.
 Requires: pip install yfinance pyyaml
 """
@@ -65,16 +65,22 @@ def hma(prices: list[float], period: int) -> float:
     return round(wma(raw_vals, sqrt_period), 4)
 
 
-def get_phase(price: float, ema10: float, sma30: float, hma_val: float) -> int:
-    """Phase 1-5 per spec."""
+def get_phase(price: float, ema10: float, sma30: float, hma_val: float, hma_prev: float) -> int:
+    """Phase 1-5 with explicit priority: 4, 1, 2, 3, 5."""
+    phase3_base = price > ema10 and price > sma30
+    hma_falling = hma_val < hma_prev
+
+    if phase3_base and ema10 > sma30 and hma_falling:
+        return 4
     if price < ema10 and price < sma30:
         return 1
     if price > ema10 and price < sma30:
         return 2
-    if price > ema10 and price > sma30:
-        if price >= hma_val:
-            return 3
-        return 4
+    if phase3_base:
+        return 3
+    if price < ema10 and price > sma30:
+        return 5
+    # Equality edge-cases are treated as caution.
     return 5
 
 
@@ -109,16 +115,23 @@ def main():
     sma30_val = sma(closes, sma_p)
     hma_val = hma(closes, hma_p)
 
-    phase = get_phase(price, ema10_val, sma30_val, hma_val)
+    hma_prev = hma(closes[:-1], hma_p) if len(closes) > 1 else hma_val
+    phase = get_phase(price, ema10_val, sma30_val, hma_val, hma_prev)
 
     # HMA cross (simplified: compare current to prior)
-    hma_prev = hma(closes[:-1], hma_p) if len(closes) > 1 else hma_val
     if price < hma_val and price > hma_prev:
         hma_cross = "bearish"
     elif price > hma_val and price < hma_prev:
         hma_cross = "bullish"
     else:
         hma_cross = "neutral"
+
+    if hma_val < hma_prev:
+        hma_trend = "falling"
+    elif hma_val > hma_prev:
+        hma_trend = "rising"
+    else:
+        hma_trend = "flat"
 
     out = {
         "ticker": ticker,
@@ -127,6 +140,8 @@ def main():
         "ema10": ema10_val,
         "sma30": sma30_val,
         "hma": hma_val,
+        "hmaPrev": hma_prev,
+        "hmaTrend": hma_trend,
         "hmaCross": hma_cross,
     }
     print(json.dumps(out))

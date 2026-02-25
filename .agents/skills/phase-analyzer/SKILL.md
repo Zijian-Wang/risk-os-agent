@@ -14,15 +14,17 @@ metadata:
 
 Classify each position into phase 1–5 (James Boyd system) and detect HMA dead cross. Phase is one TA method among others; combine with RSI, MACD, etc. for full analysis.
 
-## Phase Table
+## Phase Table (James Boyd Priority)
 
 | Phase | Condition | Meaning |
 |-------|-----------|---------|
 | 1 | Below both 10EMA and 30SMA | Avoid / very bearish |
 | 2 | Above 10EMA, below 30SMA | Gaining momentum, watch |
 | 3 | Above both 10EMA and 30SMA | Long entry zone |
-| 4 | Below HMA but above 10/30 | Watch for trend break |
-| 5 | Price breaking down hard | Exit or already exited |
+| 4 | Phase 3 base + 10EMA > 30SMA + 10-period Hull is falling | Weakening while still structurally strong |
+| 5 | Below 10EMA and above 30SMA | Pullback in strong trend; watch for breakdown |
+
+Priority in script: **4, 1, 2, 3, 5**. If a ticker meets Phase 4 conditions, it is reported as Phase 4.
 
 ## Tools
 
@@ -54,16 +56,19 @@ Optional. Returns additional indicators (RSI, MACD, etc.) when configured in `co
   "ema10": 116.50,
   "sma30": 114.20,
   "hma": 115.80,
+  "hmaPrev": 115.92,
+  "hmaTrend": "falling",
   "hmaCross": "neutral",
   "previousPhase": 2
 }
 ```
 
 `hmaCross`: "bullish" | "bearish" | "neutral" (dead cross = bearish)
+`hmaTrend`: "rising" | "falling" | "flat"
 
 ## Config
 
-Read from `config/phase-config.yaml`: `ema_period`, `sma_period`, `hma_period`, `hma_fast`, `hma_slow`.
+Read from `config/phase-config.yaml`: `ema_period`, `sma_period`, `hma_period`.
 
 ## Hard Alerts
 

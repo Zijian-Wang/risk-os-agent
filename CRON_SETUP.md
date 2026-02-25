@@ -5,7 +5,7 @@ OpenClaw uses cron jobs for scheduled tasks. To add the morning briefing:
 ## Add Cron Job
 
 ```bash
-openclaw cron add --cron '0 7 * * *' --message 'Run morning briefing: portfolio health, positions needing attention, external events, one actionable thought'
+openclaw cron add --cron '0 7 * * *' --message 'Run python3 scripts/run_morning_brief.py --since 24h and summarize workspace/briefings/<today>.md'
 ```
 
 Use `sessionTarget: "isolated"` so it runs independently of active chat.
@@ -25,6 +25,16 @@ Per [risk-os-v2-spec.md](risk-os-v2-spec.md):
 4. One actionable thought if warranted
 
 **Principle:** If it's too long, it won't be read. Prioritize signal over completeness.
+
+## Local Dry Run
+
+```bash
+python3 scripts/run_morning_brief.py --date 2026-02-25 --since 24h
+```
+
+Outputs:
+- `workspace/briefings/2026-02-25.md`
+- `workspace/briefings/2026-02-25.json`
 
 ## Heartbeat
 

@@ -58,17 +58,19 @@ When I ask a question ("what's going on with DG?", "should I add to ON?"), the a
 ## Investment Framework (Agent Must Know This)
 
 ### Phase System (James Boyd / adapted)
-Uses 10EMA, 30SMA, and HMA to classify each position:
+Uses 10EMA, 30SMA, and 10-period Hull MA to classify each position:
 
 | Phase | Condition | Meaning |
 |-------|-----------|---------|
 | 1 | Below both 10EMA and 30SMA | Avoid / very bearish |
 | 2 | Above 10EMA, below 30SMA | Gaining momentum, watch |
 | 3 | Above both 10EMA and 30SMA | Long entry zone |
-| 4 | Below HMA but above 10/30 | Watch for trend break |
-| 5 | Price breaking down hard | Exit or already exited |
+| 4 | Phase 3 conditions + 10EMA > 30SMA + Hull MA is falling | Weakening warning while still technically strong |
+| 5 | Close < 10EMA and Close > 30SMA | Pullback in strong trend; caution for potential breakdown |
 
-*Note: Periods are adjusted for longer-trend analysis. Specifics TBD during build.*
+Phase priority in script: **4, 1, 2, 3, 5** (Phase 4 is evaluated first).
+
+*Note: Defaults use original periods and can be adjusted for longer-trend analysis later.*
 
 Also uses: 10/20 day HMA for fast momentum detection.
 
