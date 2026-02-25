@@ -162,6 +162,7 @@ Verifies:
 Runs the end-to-end morning brief pipeline:
 - pull positions (`schwab-portfolio`)
 - run stop/drawdown/exposure checks (`risk-calculator`)
+- concentration exposure uses position `marketValue` when available (important for options contract sizing)
 - compute phases for holdings (`phase-analyzer`)
 - fetch/scored relevant news (`market-news`)
 - persist state in `workspace/alerts/briefing_state.json` for phase/news deltas
