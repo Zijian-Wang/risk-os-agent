@@ -1,6 +1,3 @@
-# RiskOS Agent — Python deps for skills
-# schwab-portfolio
 schwab-py>=0.1.0
-# phase-analyzer
 yfinance>=0.2.0
 pyyaml>=6.0
