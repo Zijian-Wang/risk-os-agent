@@ -26,6 +26,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 BRIEFINGS_DIR = REPO_ROOT / "workspace" / "briefings"
 ALERTS_DIR = REPO_ROOT / "workspace" / "alerts"
 STATE_PATH = ALERTS_DIR / "briefing_state.json"
+RISK_RULES_PATH = REPO_ROOT / "config" / "risk-rules.yaml"
 
 GET_POSITIONS = REPO_ROOT / ".agents" / "skills" / "schwab-portfolio" / "scripts" / "get_positions.py"
 CHECK_STOPS = REPO_ROOT / ".agents" / "skills" / "risk-calculator" / "scripts" / "check_stops.py"
@@ -153,6 +154,32 @@ def choose_actionable_thought(hard_alerts: list[str], phases: list[dict[str, Any
     return None
 
 
+def load_phase_transition_pairs() -> set[tuple[int, int]]:
+    default_pairs = {(3, 4), (4, 5)}
+    try:
+        import yaml
+
+        if not RISK_RULES_PATH.exists():
+            return default_pairs
+        with open(RISK_RULES_PATH) as f:
+            cfg = yaml.safe_load(f) or {}
+        hard_alerts = cfg.get("hard_alerts", {}) if isinstance(cfg, dict) else {}
+        raw_pairs = hard_alerts.get("phase_transition_pairs", [])
+        if not isinstance(raw_pairs, list):
+            return default_pairs
+        out: set[tuple[int, int]] = set()
+        for item in raw_pairs:
+            if not isinstance(item, list) or len(item) != 2:
+                continue
+            try:
+                out.add((int(item[0]), int(item[1])))
+            except Exception:
+                continue
+        return out or default_pairs
+    except Exception:
+        return default_pairs
+
+
 def build_external_events(headlines: list[dict[str, Any]], limit: int = 8) -> list[str]:
     filtered = [h for h in headlines if h.get("score") in ("adversarial", "major", "macro")]
     filtered.sort(key=lambda h: str(h.get("publishedAt") or ""), reverse=True)
@@ -186,6 +213,7 @@ def main() -> int:
     output_dir.mkdir(parents=True, exist_ok=True)
     previous_state = load_state(STATE_PATH)
     state_loaded = bool(previous_state)
+    hard_phase_transition_pairs = load_phase_transition_pairs()
 
     py = sys.executable
 
@@ -248,7 +276,7 @@ def main() -> int:
             if phase != previous_phase:
                 transition = f"{ticker} phase transition {previous_phase} -> {phase}"
                 phase_transitions.append(transition)
-                if (previous_phase, phase) in {(3, 4), (4, 5)}:
+                if (previous_phase, phase) in hard_phase_transition_pairs:
                     hard_alerts.append(f"Phase alert: {transition} (hard-alert transition).")
                 else:
                     watch_flags.append(f"{transition}.")

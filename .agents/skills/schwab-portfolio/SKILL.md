@@ -57,12 +57,16 @@ Returns account-level summary: total value, cash, buying power, daily P&L %.
 - `SCHWAB_APP_SECRET` — Schwab app secret
 - `SCHWAB_CALLBACK_URL` — OAuth callback (default: `https://127.0.0.1`)
 - `SCHWAB_TOKEN_PATH` — Path to token file (default: `workspace/portfolio/token.json`)
+- `config/risk-rules.yaml` `schwab_order_detection`:
+  - `active_statuses` (default: WORKING, AWAITING_STOP_CONDITION, QUEUED, PENDING_ACTIVATION)
+  - `protective_order_types` (default: STOP, STOP_LIMIT, TRAILING_STOP)
+  - `short_limit_as_stop_fallback` (carry-over compatibility flag from old app sync logic)
 
 **First run:** Run `python scripts/auth_schwab.py` to complete OAuth flow. Token is saved to token path.
 
 ## Stops
 
-Stop orders are fetched from Schwab API (STOP and STOP_LIMIT orders with status WORKING, PENDING_ACTIVATION, AWAITING_STOP_CONDITION). Fallback: `workspace/portfolio/stops.json` for manual overrides.
+Protective stops are fetched from Schwab API using `schwab_order_detection` config values. Default active statuses include `WORKING`, `AWAITING_STOP_CONDITION`, `QUEUED`, `PENDING_ACTIVATION`; default protective order types include `STOP`, `STOP_LIMIT`, `TRAILING_STOP`. Fallback: `workspace/portfolio/stops.json` for manual overrides.
 
 ## References
 

@@ -71,7 +71,7 @@ risk-os-agent/
 ├── config/
 │   ├── phase-config.yaml    # Phase periods (default 10EMA/30SMA/10 Hull)
 │   ├── ta-config.yaml       # RSI, MACD, etc. (extensible)
-│   └── risk-rules.yaml      # Alert thresholds (TBD)
+│   └── risk-rules.yaml      # Alert thresholds + carry-over risk defaults
 ├── workspace/               # Agent workspace data
 │   ├── portfolio/          # Cached positions
 │   ├── alerts/             # Alert history + briefing_state.json (dedup/deltas)

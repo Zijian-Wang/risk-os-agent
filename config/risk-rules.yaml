@@ -1,11 +1,23 @@
-# Risk rules and alert thresholds
-# TBD during build
+# Risk rules and alert thresholds.
+# Keep these values aligned with risk-os-v2-spec.md and carry-over behavior from Trade-Analysis.
+
+risk_per_trade:
+  default_pct: 0.75
+  notes: "Default from old app calculator; user configurable."
 
 hard_alerts:
   portfolio_daily_down_pct: 1.0
   stop_approaching_pct: 5.0  # within X% of stop
-  phase_transitions: [3, 4, 5]  # alert on transitions to these
+  phase_transition_pairs:
+    - [3, 4]
+    - [4, 5]
 
 soft_flags:
   consecutive_down_days: 2
-  # add more as needed
+  concentration_warn_pct: 20.0
+
+schwab_order_detection:
+  active_statuses: [WORKING, AWAITING_STOP_CONDITION, QUEUED, PENDING_ACTIVATION]
+  protective_order_types: [STOP, STOP_LIMIT, TRAILING_STOP]
+  # Carry-over rule from old app sync: for short positions, BUY/BUY_TO_COVER LIMIT above entry can be treated as protective stop fallback.
+  short_limit_as_stop_fallback: true

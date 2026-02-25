@@ -10,6 +10,22 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 POSITIONS_PATH = REPO_ROOT / "workspace" / "portfolio" / "positions.json"
+CONFIG_PATH = REPO_ROOT / "config" / "risk-rules.yaml"
+
+
+def load_concentration_threshold() -> Decimal:
+    try:
+        import yaml
+
+        if CONFIG_PATH.exists():
+            with open(CONFIG_PATH) as f:
+                cfg = yaml.safe_load(f) or {}
+                soft_flags = cfg.get("soft_flags", {}) if isinstance(cfg, dict) else {}
+                value = soft_flags.get("concentration_warn_pct", 20.0)
+                return Decimal(str(value))
+    except Exception:
+        pass
+    return Decimal("20.0")
 
 
 def main():
@@ -24,12 +40,13 @@ def main():
     summary = data.get("summary", {})
     total = Decimal(str(summary.get("totalValue", 0)))
 
+    threshold = load_concentration_threshold()
     re_eval = []
     if total > 0:
         for p in positions:
             mv = Decimal(str(p.get("quantity", 0))) * Decimal(str(p.get("currentPrice", 0)))
             pct = (mv / total * 100).quantize(Decimal("0.1"))
-            if float(pct) > 20:
+            if pct > threshold:
                 re_eval.append({"ticker": p.get("ticker"), "weightPct": float(pct), "reason": "concentration"})
 
     out = {

@@ -17,19 +17,19 @@ Consumes positions from schwab-portfolio and phase data from phase-analyzer. Com
 
 ### check_stops(positions)
 
-Returns positions approaching or at stop loss. Uses `config/risk-rules.yaml` for `stop_approaching_pct`.
+Returns positions approaching or at stop loss. Uses `config/risk-rules.yaml` `hard_alerts.stop_approaching_pct`.
 
 **Invocation:** `python scripts/check_stops.py` (reads positions from stdin or workspace/portfolio/positions.json)
 
 ### portfolio_drawdown(positions)
 
-Returns portfolio daily P&L % and drawdown metrics.
+Returns portfolio daily P&L % and drawdown metrics. Uses `hard_alerts.portfolio_daily_down_pct`.
 
 **Invocation:** `python scripts/portfolio_drawdown.py`
 
 ### exposure_summary(positions)
 
-Returns portfolio-level risk exposure, sector concentration, re-eval flags.
+Returns portfolio-level risk exposure, sector concentration, re-eval flags. Uses `soft_flags.concentration_warn_pct`.
 
 **Invocation:** `python scripts/exposure_summary.py`
 
@@ -67,12 +67,18 @@ portfolio_drawdown:
 
 ## Hard Alerts
 
-- Portfolio daily P&L < -1% (from risk-rules)
-- Any position at or within stop_approaching_pct of stop
+- Portfolio daily P&L < `-hard_alerts.portfolio_daily_down_pct`
+- Any position at or within `hard_alerts.stop_approaching_pct` of stop
+- Phase transitions in `hard_alerts.phase_transition_pairs` are consumed by the morning brief pipeline
 
 ## Config
 
-Read from `config/risk-rules.yaml`.
+Read from `config/risk-rules.yaml`:
+- `risk_per_trade.default_pct` (default account risk baseline, from old app)
+- `hard_alerts.portfolio_daily_down_pct`
+- `hard_alerts.stop_approaching_pct`
+- `hard_alerts.phase_transition_pairs`
+- `soft_flags.concentration_warn_pct`
 
 ## References
 

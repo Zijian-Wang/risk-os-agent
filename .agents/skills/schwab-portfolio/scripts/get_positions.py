@@ -20,6 +20,20 @@ STOPS_PATH = WORKSPACE / "stops.json"
 OUTPUT_PATH = WORKSPACE / "positions.json"
 
 
+def load_risk_rules() -> dict:
+    cfg_path = REPO_ROOT / "config" / "risk-rules.yaml"
+    try:
+        import yaml
+
+        if cfg_path.exists():
+            with open(cfg_path) as f:
+                cfg = yaml.safe_load(f) or {}
+                return cfg if isinstance(cfg, dict) else {}
+    except Exception:
+        pass
+    return {}
+
+
 def load_stops():
     """Local stops from workspace/portfolio/stops.json (fallback)."""
     if STOPS_PATH.exists():
@@ -33,13 +47,30 @@ def fetch_stop_orders(client, account_hash) -> dict:
     stops = {}
     try:
         from schwab.client import Client
+        rules = load_risk_rules().get("schwab_order_detection", {})
+        status_names = rules.get("active_statuses", []) if isinstance(rules, dict) else []
+        if not isinstance(status_names, list) or not status_names:
+            status_names = ["WORKING", "AWAITING_STOP_CONDITION", "QUEUED", "PENDING_ACTIVATION"]
+        order_types = rules.get("protective_order_types", []) if isinstance(rules, dict) else []
+        if not isinstance(order_types, list) or not order_types:
+            order_types = ["STOP", "STOP_LIMIT", "TRAILING_STOP"]
+
+        statuses = []
+        for name in status_names:
+            if not isinstance(name, str):
+                continue
+            status_enum = getattr(Client.Order.Status, name, None)
+            if status_enum is not None:
+                statuses.append(status_enum)
+        if not statuses:
+            for name in ["WORKING", "AWAITING_STOP_CONDITION", "QUEUED", "PENDING_ACTIVATION"]:
+                status_enum = getattr(Client.Order.Status, name, None)
+                if status_enum is not None:
+                    statuses.append(status_enum)
+
         resp = client.get_orders_for_account(
             account_hash,
-            statuses=[
-                Client.Order.Status.WORKING,
-                Client.Order.Status.PENDING_ACTIVATION,
-                Client.Order.Status.AWAITING_STOP_CONDITION,
-            ],
+            statuses=statuses,
             max_results=50,
         )
         if resp.status_code != 200:
@@ -48,9 +79,10 @@ def fetch_stop_orders(client, account_hash) -> dict:
         orders = data if isinstance(data, list) else data.get("orders", data.get("order", []))
         if not isinstance(orders, list):
             orders = []
+        allowed_types = {str(x).upper() for x in order_types if isinstance(x, str)}
         for order in orders:
             order_type = (order.get("orderType") or "").upper()
-            if order_type not in ("STOP", "STOP_LIMIT"):
+            if order_type not in allowed_types:
                 continue
             stop_price = order.get("stopPrice")
             if stop_price is None:
