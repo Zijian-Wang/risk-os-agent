@@ -48,6 +48,7 @@ def main():
     alerts = []
     for p in positions:
         ticker = p.get("ticker", "?")
+        direction = str(p.get("direction", "long")).strip().lower()
         stop = p.get("stop")
         if stop is None:
             continue
@@ -59,12 +60,17 @@ def main():
         if current <= 0 or stop_dec <= 0:
             continue
 
-        pct_to_stop = ((current - stop_dec) / current * 100).quantize(Decimal("0.01"))
-        status = "hit" if current <= stop_dec else ("approaching" if float(pct_to_stop) <= threshold_pct else "ok")
+        if direction == "short":
+            pct_to_stop = ((stop_dec - current) / current * 100).quantize(Decimal("0.01"))
+            status = "hit" if current >= stop_dec else ("approaching" if float(pct_to_stop) <= threshold_pct else "ok")
+        else:
+            pct_to_stop = ((current - stop_dec) / current * 100).quantize(Decimal("0.01"))
+            status = "hit" if current <= stop_dec else ("approaching" if float(pct_to_stop) <= threshold_pct else "ok")
 
         if status != "ok":
             alerts.append({
                 "ticker": ticker,
+                "direction": direction,
                 "currentPrice": float(current),
                 "stop": float(stop_dec),
                 "pctToStop": float(pct_to_stop),
