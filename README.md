@@ -182,7 +182,9 @@ python3 scripts/run_morning_brief.py --date 2026-02-25 --since 24h
 - **phase-analyzer** — `pip install yfinance pyyaml`
   - Default phase system: 10EMA, 30SMA, 10-period Hull
   - Priority: Phase 4 is evaluated first, then 1, 2, 3, 5
-- **Price API** — yfinance used by default
+- **Price API**
+  - Current implementation: yfinance used by default (phase-analyzer)
+  - Target architecture: migrate to Schwab price history API primary, with Stooq fallback
 - **market-news** — Supports NewsAPI.org and Finnhub; set `NEWS_API_KEY`, choose `NEWS_API_SOURCE` (`newsapi` or `finnhub`), optional `NEWS_CACHE_TTL_MIN`
 
 See [.env.example](.env.example) for required env vars.

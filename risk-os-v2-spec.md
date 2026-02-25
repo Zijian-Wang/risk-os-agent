@@ -121,7 +121,9 @@ Uses 10EMA, 30SMA, and 10-period Hull MA to classify each position:
   - Protective order types include `STOP`, `STOP_LIMIT`, `TRAILING_STOP`; for short positions, use protective `LIMIT` buy orders above entry as stop fallback
   - OCO order normalization for stop/target detection already battle-tested
   - Schwab Streamer API available for real-time WebSocket data if needed later
-- **Price & indicators:** Schwab price history API (already used in old app) + Stooq fallback
+- **Price & indicators:**
+  - Current implementation (agent): yfinance in `phase-analyzer`
+  - Target carry-over path: Schwab price history API as primary + Stooq fallback
 - **News:** To be determined — needs to be position-relevant, not generic market noise
 - **Research/reports:** TBD — investment bank reports, Citron-style short reports
 

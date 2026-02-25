@@ -70,6 +70,10 @@ Optional. Returns additional indicators (RSI, MACD, etc.) when configured in `co
 
 Read from `config/phase-config.yaml`: `ema_period`, `sma_period`, `hma_period`.
 
+## Data Source
+
+Current implementation uses yfinance for candles/indicators. Target architecture is Schwab price history API as primary with Stooq fallback.
+
 ## Hard Alerts
 
 Hard transition alerts come from `config/risk-rules.yaml` `hard_alerts.phase_transition_pairs` (default: 3→4 and 4→5). Flag HMA dead cross as soft flag.
