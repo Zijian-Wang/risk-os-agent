@@ -29,6 +29,22 @@ def main():
     closes = hist["Close"].dropna().tolist()
     out = analyze_closes(ticker=ticker, closes=closes)
 
+    prev_price = closes[-2] if len(closes) > 1 else price
+
+    # HMA cross: detect price crossing through HMA using prior close vs prior HMA.
+    if prev_price >= hma_prev and price < hma_val:
+        hma_cross = "bearish"
+    elif prev_price <= hma_prev and price > hma_val:
+        hma_cross = "bullish"
+    else:
+        hma_cross = "neutral"
+
+    if hma_val < hma_prev:
+        hma_trend = "falling"
+    elif hma_val > hma_prev:
+        hma_trend = "rising"
+    else:
+        hma_trend = "flat"
     if "error" in out:
         print(json.dumps(out))
         sys.exit(1)
