@@ -118,7 +118,7 @@ def main():
     hma_prev = hma(closes[:-1], hma_p) if len(closes) > 1 else hma_val
     phase = get_phase(price, ema10_val, sma30_val, hma_val, hma_prev)
 
-    prev_price = closes[-2] if len(closes) > 1 else price
+    prev_price = closes[-2]
 
     # HMA cross: detect price crossing through HMA using prior close vs prior HMA.
     if prev_price >= hma_prev and price < hma_val:
