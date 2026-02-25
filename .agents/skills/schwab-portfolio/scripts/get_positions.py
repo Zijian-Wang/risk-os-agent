@@ -59,6 +59,20 @@ def to_float(value):
         return None
 
 
+def get_balance_amount(balance_obj: dict, field_names: list[str]) -> Decimal | None:
+    for field_name in field_names:
+        if field_name not in balance_obj:
+            continue
+        value = balance_obj.get(field_name)
+        if isinstance(value, dict):
+            value = value.get("amount") or value.get("value")
+        try:
+            return Decimal(str(value))
+        except Exception:
+            continue
+    return None
+
+
 def normalize_instruction(value) -> str:
     return str(value or "").strip().upper()
 
@@ -320,20 +334,44 @@ def main():
 
     # Summary from Schwab
     sec = data.get("securitiesAccount", {})
-    total = sec.get("currentBalances", {}).get("liquidationValue") or sec.get("initialBalances", {}).get("liquidationValue")
-    cash = sec.get("currentBalances", {}).get("cashBalance") or sec.get("initialBalances", {}).get("cashBalance")
+    current_balances = sec.get("currentBalances", {}) if isinstance(sec.get("currentBalances", {}), dict) else {}
+    total = current_balances.get("liquidationValue") or sec.get("initialBalances", {}).get("liquidationValue")
+    cash = current_balances.get("cashBalance") or sec.get("initialBalances", {}).get("cashBalance")
     if isinstance(total, dict):
         total = total.get("amount") or total.get("value")
     if isinstance(cash, dict):
         cash = cash.get("value") or cash.get("amount")
 
+    total_value = to_decimal(total)
+    daily_profit_loss = get_balance_amount(
+        current_balances,
+        [
+            "dailyProfitLoss",
+            "currentDayProfitLoss",
+        ],
+    )
+
+    daily_pnl_pct = None
+    stderr_warnings = []
+    if daily_profit_loss is not None and total_value != 0:
+        daily_pnl_pct = float((daily_profit_loss / total_value * Decimal("100")).quantize(Decimal("0.01")))
+    elif daily_profit_loss is None:
+        # Log what Schwab actually returned so we can add support for newly observed fields.
+        observed_keys = sorted(current_balances.keys())
+        stderr_warnings.append(
+            "dailyProfitLoss not found in securitiesAccount.currentBalances "
+            f"(observed keys: {observed_keys})"
+        )
+
     summary = {
         "totalValue": float(total or 0),
         "cash": float(cash or 0),
-        "dailyPnlPct": None,  # Schwab may provide in different field
+        "dailyPnlPct": daily_pnl_pct,
     }
 
     out = {"positions": positions, "summary": summary}
+    if stderr_warnings:
+        out["_stderr"] = "\n".join(stderr_warnings)
 
     # Cache for risk-calculator and offline use
     with open(OUTPUT_PATH, "w") as f:
