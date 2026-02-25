@@ -1,0 +1,71 @@
+---
+name: schwab-portfolio
+description: Pull current positions, prices, P&L, and stops from Schwab API. Use when the agent needs portfolio data for monitoring, alerts, or Q&A.
+metadata:
+  openclaw:
+    requires:
+      env: ["SCHWAB_API_KEY", "SCHWAB_APP_SECRET"]
+    primaryEnv: "SCHWAB_API_KEY"
+---
+
+# Schwab Portfolio
+
+## Purpose
+
+Fetch portfolio positions and account summary directly from Schwab Trader API via schwab-py. Fully self-contained; no external risk-os dependency.
+
+## Tools
+
+### get_positions
+
+Returns current positions with: ticker, quantity, avg cost, current price, P&L, stop (if in local stops file).
+
+**Invocation:** `python scripts/get_positions.py`
+
+### get_account_summary
+
+Returns account-level summary: total value, cash, buying power, daily P&L %.
+
+**Invocation:** Same script returns both positions and summary in one call.
+
+## Output Format
+
+```json
+{
+  "positions": [
+    {
+      "ticker": "NVDA",
+      "quantity": 100,
+      "avgCost": 112.50,
+      "currentPrice": 118.20,
+      "pnl": 570.00,
+      "pnlPct": 5.07,
+      "stop": 105.00
+    }
+  ],
+  "summary": {
+    "totalValue": 50000,
+    "cash": 5000,
+    "dailyPnlPct": -0.5
+  }
+}
+```
+
+## Configuration
+
+- `SCHWAB_API_KEY` — Schwab app key (from developer portal)
+- `SCHWAB_APP_SECRET` — Schwab app secret
+- `SCHWAB_CALLBACK_URL` — OAuth callback (default: `https://127.0.0.1`)
+- `SCHWAB_TOKEN_PATH` — Path to token file (default: `workspace/portfolio/token.json`)
+
+**First run:** Run `python scripts/auth_schwab.py` to complete OAuth flow. Token is saved to token path.
+
+## Stops
+
+Stop orders are fetched from Schwab API (STOP and STOP_LIMIT orders with status WORKING, PENDING_ACTIVATION, AWAITING_STOP_CONDITION). Fallback: `workspace/portfolio/stops.json` for manual overrides.
+
+## References
+
+- [schwab-py](https://schwab-py.readthedocs.io/) — Schwab API client
+- [risk-os](https://github.com/zijian-wang/risk-os) — Web-based risk calculator with Schwab integration (related project)
+- [risk-os-v2-spec.md](/risk-os-v2-spec.md) — Data sources

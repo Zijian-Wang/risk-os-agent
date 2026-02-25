@@ -1,0 +1,11 @@
+# Risk rules and alert thresholds
+# TBD during build
+
+hard_alerts:
+  portfolio_daily_down_pct: 1.0
+  stop_approaching_pct: 5.0  # within X% of stop
+  phase_transitions: [3, 4, 5]  # alert on transitions to these
+
+soft_flags:
+  consecutive_down_days: 2
+  # add more as needed

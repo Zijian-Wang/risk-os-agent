@@ -1,0 +1,29 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+token.json
+**/token.json
+credentials*.json
+*.pem
+
+# Workspace data (agent-generated)
+workspace/portfolio/*
+workspace/alerts/*
+workspace/briefings/*
+!workspace/portfolio/.gitkeep
+!workspace/alerts/.gitkeep
+!workspace/briefings/.gitkeep
+
+# OS and editor
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+venv/

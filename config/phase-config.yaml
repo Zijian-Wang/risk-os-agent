@@ -1,0 +1,10 @@
+# Phase system config (James Boyd / adapted)
+# Periods TBD during build
+
+ema_period: 10
+sma_period: 30
+hma_period: null  # TBD
+
+# HMA fast/slow for dead cross detection
+hma_fast: 10
+hma_slow: 20
